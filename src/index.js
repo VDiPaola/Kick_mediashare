@@ -1,17 +1,58 @@
 import React from 'react';
-import ReactDOM from 'react-dom/client';
-import './index.css';
 import App from './App';
-import reportWebVitals from './reportWebVitals';
+import { createRoot } from 'react-dom/client';
+import { configureStore } from '@reduxjs/toolkit'
+import {Provider, connect} from "react-redux";
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+//setup redux
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();
+//action types
+const VIDEO_ADD = "VIDEO_ADD";
+
+const videoAddAction = (videoId) =>({
+  videoId,
+  type: VIDEO_ADD
+});
+
+
+
+//reducer
+const defaultState = {
+  videos:[]
+}
+const reducer = (state = defaultState, action)=>{
+  switch(action.type){
+    case VIDEO_ADD: {
+      //update state
+      state.videos.push(action.videoId)
+      return state;
+    }
+    default: return state;
+  }
+}
+
+const store = configureStore({reducer});
+//bind to props
+const bindPropsToState = (state) => ({
+  videos: state.videos
+})
+const bindPropsToAction = (dispatch) => ({
+  submitVideoAddAction: (videoId)=>dispatch(videoAddAction(videoId))
+})
+
+
+
+//render
+const Connected = connect(bindPropsToState,bindPropsToAction)(App)
+
+const Root = () => (
+  <Provider store={store}>
+    <Connected />
+  </Provider>
+)
+
+
+
+const domNode = document.getElementById('root');
+const root = createRoot(domNode);
+root.render(<Root />);
