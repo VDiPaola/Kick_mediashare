@@ -1,3 +1,5 @@
+const ip = "192.168.0.31"
+const port = process.env.REACT_APP_BACKEND_PORT
 
 const Button = (props) => {
     return (
@@ -6,13 +8,13 @@ const Button = (props) => {
         </div>
     )
 }
-let ip = "192.168.0.31"
+
 
 //["0.25", "0.5", "0.75", "1", "1.25", "1.5", "1.75", "2"]
 const playbackRates = ["0.25", "0.5", "1", "1.5", "1.75", "2"]
 
 const request = (message, data={}) => {
-    fetch(`http://${ip}:4000/video`, {
+    fetch(`http://${ip}:${port}/video`, {
         body: JSON.stringify({...data, message}),
         method: "POST",
         headers: {

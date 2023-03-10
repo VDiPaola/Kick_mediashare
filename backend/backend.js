@@ -3,19 +3,28 @@ const express = require('express')
 const cors = require('cors')
 const app = express()
 
+const wsPort = 8080
+const backendPort = 4000
 
 // WEBSOCKET
-const wss = new WebSocket.Server({ port: 8080 });
+const wss = new WebSocket.Server({ port: wsPort });
 
 let kickSocket = null
-const websocketConfig = {
-  wsKey: null,
-  wsCluster: null
-}
-
 let websiteSocket = null
 
 const prefix = "!"
+const wsCluster = "us2"
+const wsKey = "eb1d5f283081a78b932c"
+// Echo.connector.options
+const url = `wss://ws-${wsCluster}.pusher.com/app/${wsKey}?protocol=7&client=js&version=7.4.0&flash=false`
+
+const chatroomId = 6234
+//fetch("https://kick.com/api/v1/channels/DezYudi").then(res => res.json()).then(res => console.log(res.chatroom.id))
+
+function sendMessage(event, data, user){
+  let res = {...data, event, user}
+  websiteSocket.send(JSON.stringify(res))
+}
 
 function parseMessage(data){
     if (!websiteSocket) return
@@ -33,7 +42,7 @@ function parseMessage(data){
                 let video = words[1]
                 let startTime = words.length > 2 ? words[2] : 0
                 startTime = isNaN(startTime) ? 0 : startTime
-                websiteSocket.send(JSON.stringify({"event":"video_add",video, startTime}))
+                sendMessage("video_add" ,{video, startTime}, user)
                 break;
             default:
                 console.log("no command found for: ", command)
@@ -44,49 +53,46 @@ function parseMessage(data){
 
 
 
-// Handle incoming connections
+// Media Share websocket
 wss.on('connection', (ws) => {
   console.log('Client connected');
   // Handle incoming messages
   ws.on('message', (response) => {
     response = JSON.parse(response)
-    console.log(`Websocket Received message`);
-    if (response.message === "initialise_connection" && !kickSocket){
-      const chatroomId = response.data.chatroomId
-      websocketConfig.wsCluster = response.data.wsCluster
-      websocketConfig.wsKey = response.data.wsKey
-      kickSocket = new WebSocket(`wss://ws-${response.data.wsCluster}.pusher.com/app/${response.data.wsKey}?protocol=7&client=js&version=7.4.0&flash=false`);
-      kickSocket.on('error', console.error);
-      kickSocket.on('open', (event) => {
-        console.log('WebSocket connection established.');
-      });
-      kickSocket.on('message', (kickResponse) => {
-        console.log("KickSocket recieved message: ")
-        kickResponse = JSON.parse(kickResponse)
-
-        if (kickResponse.event === "pusher:connection_established"){
-            kickSocket.send(JSON.stringify({"event":"pusher:subscribe","data":{"auth":"","channel":"chatrooms."+chatroomId}}))
-          
-        }else if (kickResponse.event.includes("ChatMessageSentEvent")){
-            let data = JSON.parse(kickResponse.data)
-            parseMessage(data)
-        }
-      });
-  
-      kickSocket.on('close', (event) => {
-        console.log('WebSocket connection closed.');
-      });
-    }else if (response.message === "website_initialise"){
+    if (response.message === "website_initialise"){
+      console.log("connected to media share websocket")
         websiteSocket = ws
     }
-    
-    
   });
 
   // Handle disconnections
   ws.on('close', () => {
     console.log('Client disconnected');
   });
+});
+
+//Kick websocket
+kickSocket = new WebSocket(url);
+kickSocket.on('error', console.error);
+kickSocket.on('open', (event) => {
+  console.log('WebSocket connection established.');
+});
+kickSocket.on('message', (kickResponse) => {
+  kickResponse = JSON.parse(kickResponse)
+  if (kickResponse.event === "pusher:connection_established"){
+    //subscribe to chat messages
+    console.log("Listening to chat messages at: " + chatroomId)
+      kickSocket.send(JSON.stringify({"event":"pusher:subscribe","data":{"auth":"","channel":"chatrooms."+chatroomId}}))
+    
+  }else if (kickResponse.event.includes("ChatMessageSentEvent")){
+    //recieved chat message
+      let data = JSON.parse(kickResponse.data)
+      parseMessage(data)
+  }
+});
+
+kickSocket.on('close', (event) => {
+  console.log('WebSocket connection closed.');
 });
 
 
@@ -103,8 +109,7 @@ app.post('/video', (req, res) => {
         }
         else if (data.message === "video_pause"){
             websiteSocket.send(JSON.stringify({"event":"video_pause"}))
-        }
-        else if (data.message === "video_skip"){
+        }else if (data.message === "video_skip"){
             websiteSocket.send(JSON.stringify({"event":"video_skip"}))
         }else if (data.message === "video_volume"){
             websiteSocket.send(JSON.stringify({"event":"video_volume", volume:data.volume}))
@@ -120,4 +125,4 @@ app.post('/video', (req, res) => {
     res.send()
 });
 console.log("listening")
-app.listen(4000);
+app.listen(backendPort);

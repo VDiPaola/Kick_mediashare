@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
 import YoutubeComponent from './YoutubePlayer'
 
+const wsHost = process.env.REACT_APP_BACKEND
+const wsPort = process.env.REACT_APP_WS_PORT
+
 const VideoPlayerPage = (props) => {
     const [videos, setVideos] = useState([])
     const [showVideo,setShowVideo] = useState(false)
     const [videoObject, setVideoObject] = useState(null)
     const [videoId, setVideoId] = useState("")
-    const [socket,setSocket] = useState(new WebSocket("ws://localhost:8080"))
+    const [socket,setSocket] = useState(new WebSocket(`ws://${wsHost}:${wsPort}`))
 
     
 
