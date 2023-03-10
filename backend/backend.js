@@ -44,6 +44,9 @@ function parseMessage(data){
                 startTime = isNaN(startTime) ? 0 : startTime
                 sendMessage("video_add" ,{video, startTime}, user)
                 break;
+            case "tts":
+                let message = message.slice(4);
+                //trigger stream labs alert
             default:
                 console.log("no command found for: ", command)
         }
