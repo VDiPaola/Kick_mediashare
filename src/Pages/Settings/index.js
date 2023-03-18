@@ -1,4 +1,4 @@
-const ip = "192.168.0.31"
+const ip = process.env.REACT_APP_BACKEND
 const port = process.env.REACT_APP_BACKEND_PORT
 
 const Button = (props) => {

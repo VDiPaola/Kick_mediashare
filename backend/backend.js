@@ -18,7 +18,7 @@ const wsKey = "eb1d5f283081a78b932c"
 // Echo.connector.options
 const url = `wss://ws-${wsCluster}.pusher.com/app/${wsKey}?protocol=7&client=js&version=7.4.0&flash=false`
 
-const chatroomId = 6234
+const chatroomId = 65515
 //fetch("https://kick.com/api/v1/channels/DezYudi").then(res => res.json()).then(res => console.log(res.chatroom.id))
 
 function sendMessage(event, data, user){

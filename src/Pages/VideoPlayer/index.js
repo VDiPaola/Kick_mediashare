@@ -19,8 +19,7 @@ const VideoPlayerPage = (props) => {
         }
         function socketMessage(event){
             let data = JSON.parse(event.data)
-            console.log(data)
-            console.log(videoObject)
+
             if (data.event === "video_play" && videoObject){
                 videoObject.playVideo()
             }else if (data.event === "video_pause" && videoObject){
@@ -44,10 +43,13 @@ const VideoPlayerPage = (props) => {
                 }
                 console.log(id)
                 //add to videos
-                videos.push(id)
-                setVideos(videos)
+                if (!videos.includes(id)) {
+                    videos.push(id)
+                    setVideos(videos)
+                }
+                
                 //load next
-                if (!videoObject){
+                if (videoObject == null){
                     loadNext()
                 }
             }
@@ -107,12 +109,10 @@ const VideoPlayerPage = (props) => {
 
     return (
         <div>
-            {showVideo &&
             <>
-            {videoObject && <h3 className='video-title'>playing video: {videoObject.videoTitle}</h3>}
-            <YoutubeComponent videoId={videoId} onReady={onReady} onEnd={onEnd} onError={onError} onStateChange={onStateChange}/>
+            {videoObject && <h3 className={`video-title ${showVideo ? "" : "hidden"}`}>playing video: {videoObject.videoTitle}</h3>}
+            <YoutubeComponent className={showVideo ? "" : "hidden"} videoId={videoId} onReady={onReady} onEnd={onEnd} onError={onError} onStateChange={onStateChange}/>
             </>
-            }
         </div>
     )
 
